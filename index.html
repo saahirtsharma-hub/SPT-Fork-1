@@ -3,186 +3,537 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>U.S. Tax Residency Calculator | Substantial Presence Test</title>
-    <!-- Tailwind CSS for rapid styling -->
+    <meta name="description" content="Calculate U.S. tax residency status using the Substantial Presence Test (IRS Publication 519)">
+    <title>Tax Residency Calculator | Check Your Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-modern {
+            @apply w-full px-5 py-4 rounded-2xl bg-white border-2 border-gray-100;
+            @apply focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none font-medium text-gray-700;
+        }
+
+        .button-primary {
+            @apply px-8 py-4 rounded-2xl font-bold text-white uppercase tracking-wider;
+            @apply bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800;
+            @apply active:scale-95 shadow-xl hover:shadow-2xl;
+        }
+
+        .button-secondary {
+            @apply px-6 py-3 rounded-xl font-semibold;
+            @apply bg-gray-100 hover:bg-gray-200 text-gray-700;
+        }
+
+        .card-modern {
+            @apply rounded-3xl shadow-2xl;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-badge {
+            @apply inline-flex items-center gap-2 px-6 py-3 rounded-full font-black text-sm uppercase tracking-wider;
+            @apply shadow-lg;
+        }
+
+        .status-resident {
+            @apply bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700;
+        }
+
+        .status-nonresident {
+            @apply bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700;
+        }
+
+        .result-section {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .icon-box {
+            @apply w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .hover-lift {
+            @apply hover:shadow-xl hover:-translate-y-1;
+        }
+
+        .divider-gradient {
+            background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+        }
+
+        .input-label {
+            @apply block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider;
+        }
+
+        .info-box {
+            @apply rounded-2xl p-6 border-2 backdrop-filter backdrop-blur-sm;
+        }
+
+        .info-box-warning {
+            @apply info-box bg-amber-50 border-amber-200;
+        }
+
+        .info-box-error {
+            @apply info-box bg-red-50 border-red-200;
+        }
+
+        .info-box-success {
+            @apply info-box bg-emerald-50 border-emerald-200;
+        }
+
+        .year-card {
+            @apply p-6 rounded-2xl bg-gray-50 border-2 border-gray-200 hover-lift;
+        }
+
+        .summary-row {
+            @apply flex justify-between items-center py-3 px-4 rounded-lg hover:bg-gray-50;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen py-10 px-4 font-sans text-slate-900">
+<body class="font-sans text-gray-800 py-8 px-4 md:py-12">
 
-    <div class="max-w-2xl mx-auto bg-white rounded-3xl card-shadow overflow-hidden p-8 md:p-12 mb-8 border border-slate-100">
-        <header class="mb-10 text-center">
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Substantial Presence Test</h1>
-            <p class="text-slate-500 font-medium">U.S. Tax Residency Tool for 2024</p>
-        </header>
-
-        <form id="sptForm" class="space-y-8">
-            <!-- 1. Partial Day Logic Logic -->
-            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-xs text-indigo-800 leading-relaxed italic">
-                            <strong>Note on Partial Days:</strong> Count every day you were physically present in the U.S. for any part of a day, including arrival and departure days.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Visa Status (Exempt Individuals) -->
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Visa Type & Exemption Status</label>
-                <select id="visaStatus" onchange="toggleExemption()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none">
-                    <option value="none">Standard Visa (H1-B, L, O, E, TN, B1/B2)</option>
-                    <option value="student">Student (F, J, M, or Q Visa)</option>
-                    <option value="teacher">Teacher or Trainee (J or Q Visa)</option>
-                </select>
-                <p id="exemptionHint" class="mt-3 text-xs text-slate-400 hidden italic">
-                    IRS Rule: Students are typically "Exempt Individuals" for 5 years; Teachers for 2 years.
-                </p>
-            </div>
-
-            <!-- 3. Day Inputs -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">2024 (Current)</label>
-                    <input type="number" id="year0" value="0" min="0" max="366" class="w-full bg-white border border-slate-200 rounded-xl p-4 text-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">2023</label>
-                    <input type="number" id="year1" value="0" min="0" max="366" class="w-full bg-white border border-slate-200 rounded-xl p-4 text-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">2022</label>
-                    <input type="number" id="year2" value="0" min="0" max="366" class="w-full bg-white border border-slate-200 rounded-xl p-4 text-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                </div>
-            </div>
-
-            <button type="button" onclick="calculateTaxStatus()" 
-                class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 active:scale-95 text-lg uppercase tracking-widest">
-                Check My Status
-            </button>
-        </form>
-
-        <!-- Result Section -->
-        <div id="result" class="mt-12 hidden border-t border-slate-100 pt-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div id="statusBadge" class="inline-block px-5 py-1.5 rounded-full text-xs font-black uppercase mb-5 tracking-widest"></div>
-            <h2 id="resultTitle" class="text-3xl font-black text-slate-900 mb-3"></h2>
-            <p id="resultText" class="text-slate-600 mb-8 text-lg leading-relaxed"></p>
-
-            <!-- 4. Closer Connection Exception UI -->
-            <div id="closerConnectionBox" class="hidden bg-amber-50 border border-amber-200 p-6 rounded-2xl mb-8">
-                <div class="flex items-start">
-                    <span class="text-2xl mr-4">💡</span>
-                    <div>
-                        <h4 class="text-amber-900 font-bold mb-1">Closer Connection Exception</h4>
-                        <p class="text-amber-800 text-sm leading-relaxed">
-                            You meet the mathematical test, but because you spent <strong>less than 183 days</strong> in the U.S. this year, you might still be treated as a Non-Resident if you can prove a closer connection to another country via <strong>Form 8840</strong>.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Math Summary -->
-            <div id="calcSummary" class="bg-slate-50 p-6 rounded-2xl text-sm font-mono text-slate-500 space-y-2 border border-slate-100"></div>
+    <div class="max-w-5xl mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-12 text-white">
+            <h1 class="text-5xl md:text-6xl font-black mb-4 leading-tight">Tax Residency<br>Calculator</h1>
+            <p class="text-xl md:text-2xl opacity-90 font-light mb-2">Find Your U.S. Tax Status</p>
+            <p class="text-sm opacity-75">Substantial Presence Test 2024</p>
         </div>
 
-        <footer class="mt-12 pt-8 border-t border-slate-50 text-[11px] text-slate-400 text-center leading-relaxed">
-            Legal Disclaimer: This tool provides general guidance based on IRS Publication 519. It is not professional tax advice. Rules for commuters, crew members, and medical conditions may vary.
-        </footer>
-    </div>
+        <!-- Main Card Container -->
+        <div class="card-modern p-8 md:p-12 mb-8">
+            
+            <!-- Quick Info Banner -->
+            <div class="info-box-warning mb-8 border-l-8 border-l-amber-500">
+                <div class="flex gap-4">
+                    <span class="text-3xl flex-shrink-0">📋</span>
+                    <div>
+                        <h3 class="font-bold text-amber-900 mb-1">How It Works</h3>
+                        <p class="text-sm text-amber-800">Count every day you were in the U.S., including arrival and departure days. Enter your days for each year and we'll calculate your residency status.</p>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Feedback Section -->
-    <div class="max-w-2xl mx-auto text-center">
-        <p class="text-slate-400 text-sm font-medium mb-6">Built to help the global community. Feedback is welcome!</p>
-        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
-            <a href="mailto:shubhamsharma.plus@gmail.com" class="group flex items-center text-slate-600 hover:text-indigo-600 transition-colors font-bold">
-                <div class="bg-white p-2 rounded-lg shadow-sm group-hover:shadow-indigo-100 mr-3 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            <!-- Form Section -->
+            <form id="sptForm" class="mb-10" novalidate>
+                
+                <!-- Visa Status Selection -->
+                <div class="mb-10">
+                    <label class="input-label">🛂 Visa Type & Exemption Status</label>
+                    <select id="visaStatus" onchange="handleVisaChange()" class="input-modern">
+                        <option value="none">Standard Visa (H1-B, L, O, E, TN, B1/B2)</option>
+                        <option value="student">Student (F, J, M, or Q Visa)</option>
+                        <option value="teacher">Teacher or Trainee (J or Q Visa)</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-2">💡 Students qualify as exempt individuals for up to 5 years; Teachers for up to 2 years</p>
                 </div>
-                shubhamsharma.plus@gmail.com
-            </a>
-            <a href="https://www.linkedin.com/in/shubhamsharmamba/" target="_blank" class="group flex items-center text-slate-600 hover:text-indigo-600 transition-colors font-bold">
-                <div class="bg-white p-2 rounded-lg shadow-sm group-hover:shadow-indigo-100 mr-3 transition-all">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+
+                <!-- Year Input Cards -->
+                <div class="mb-10">
+                    <label class="input-label">📅 Days in U.S. by Year</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- 2024 -->
+                        <div class="year-card">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold text-lg text-gray-700">2024</span>
+                                <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">Current</span>
+                            </div>
+                            <input type="number" id="year0" value="0" min="0" max="366" class="input-modern text-center text-3xl font-black mb-2" inputmode="numeric">
+                            <div class="text-center text-xs text-gray-500">
+                                <p>Full Weight</p>
+                                <p class="font-bold text-purple-600">× 1.0</p>
+                            </div>
+                        </div>
+
+                        <!-- 2023 -->
+                        <div class="year-card">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold text-lg text-gray-700">2023</span>
+                                <span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">−1 Year</span>
+                            </div>
+                            <input type="number" id="year1" value="0" min="0" max="366" class="input-modern text-center text-3xl font-black mb-2" inputmode="numeric">
+                            <div class="text-center text-xs text-gray-500">
+                                <p>Partial Weight</p>
+                                <p class="font-bold text-gray-600">× 0.33</p>
+                            </div>
+                        </div>
+
+                        <!-- 2022 -->
+                        <div class="year-card">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold text-lg text-gray-700">2022</span>
+                                <span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">−2 Years</span>
+                            </div>
+                            <input type="number" id="year2" value="0" min="0" max="366" class="input-modern text-center text-3xl font-black mb-2" inputmode="numeric">
+                            <div class="text-center text-xs text-gray-500">
+                                <p>Lower Weight</p>
+                                <p class="font-bold text-gray-600">× 0.16</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                LinkedIn Profile
-            </a>
+
+                <!-- Calculate Button -->
+                <button type="button" onclick="handleCalculate()" class="button-primary w-full text-lg py-5 shadow-2xl">
+                    🚀 Calculate My Status
+                </button>
+            </form>
+
+            <!-- Results Section -->
+            <div id="resultContainer" class="hidden mt-12 result-section">
+                <div class="divider-gradient h-px mb-8"></div>
+
+                <!-- Status Display -->
+                <div class="mb-8">
+                    <div id="statusBadge" class="status-badge mb-6"></div>
+                    <h2 id="resultTitle" class="text-4xl font-black text-gray-900 mb-3 leading-tight"></h2>
+                    <p id="resultDescription" class="text-lg text-gray-700 leading-relaxed mb-6"></p>
+                </div>
+
+                <!-- Alert Boxes -->
+                <div id="closerConnectionBox" class="hidden info-box-warning border-l-8 border-l-amber-500 mb-6">
+                    <div class="flex gap-4">
+                        <span class="text-3xl flex-shrink-0">💡</span>
+                        <div>
+                            <h3 class="font-bold text-amber-900 mb-2">Closer Connection Exception Available</h3>
+                            <p class="text-sm text-amber-800 mb-3">You spent fewer than 183 days in the U.S. this year, but you can still qualify as a Non-Resident if you file <strong>Form 8840</strong> and prove a closer connection to another country.</p>
+                            <p class="text-xs text-amber-700 font-semibold">📝 Action: Consider filing Form 8840 if applicable</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="exemptionBox" class="hidden info-box-success border-l-8 border-l-emerald-500 mb-6">
+                    <div class="flex gap-4">
+                        <span class="text-3xl flex-shrink-0">✅</span>
+                        <div>
+                            <h3 class="font-bold text-emerald-900 mb-2">Exempt Individual Benefit</h3>
+                            <p class="text-sm text-emerald-800">Your visa classification provides exemption from the SPT for a limited period. Keep records of your entry/exit dates and visa status for IRS compliance.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box-error border-l-8 border-l-red-500 mb-8">
+                    <div class="flex gap-4">
+                        <span class="text-3xl flex-shrink-0">⚠️</span>
+                        <div>
+                            <h3 class="font-bold text-red-900 mb-2">Important: Special Cases May Apply</h3>
+                            <p class="text-sm text-red-800 mb-2">Different rules apply for:</p>
+                            <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
+                                <li>International commuters (Canada/Mexico)</li>
+                                <li>Ship/airline crew members</li>
+                                <li>Professional athletes and entertainers</li>
+                                <li>Individuals with medical conditions</li>
+                                <li>Prior elections (Form 8833)</li>
+                            </ul>
+                            <p class="text-xs text-red-700 font-semibold mt-3">🎓 Consult a tax professional before filing.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculation Breakdown -->
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-3xl border-2 border-purple-100 mb-8">
+                    <h3 class="text-xl font-black text-gray-900 mb-6">📊 Calculation Breakdown</h3>
+                    <div id="calcSummary" class="space-y-3"></div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-blue-50 p-8 rounded-3xl border-2 border-blue-200">
+                    <h3 class="text-lg font-black text-blue-900 mb-3">🎯 What Happens Next?</h3>
+                    <p class="text-sm text-blue-800 mb-4 leading-relaxed">
+                        <strong>Resident Aliens</strong> must file Form 1040 with a statement showing their residency start date. You'll be taxed on worldwide income.
+                    </p>
+                    <p class="text-sm text-blue-800 leading-relaxed">
+                        <strong>Non-Residents</strong> file Form 1040-NR and are typically only taxed on U.S.-source income.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact & Social Section -->
+        <div class="card-modern p-8 md:p-10 text-center mb-8">
+            <h2 class="text-2xl font-black text-gray-900 mb-3">Have Questions?</h2>
+            <p class="text-gray-600 mb-8 text-lg">Check out my YouTube channel or reach out directly</p>
+            
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+                <!-- GitHub -->
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" 
+                    class="flex items-center gap-3 button-secondary hover:shadow-lg w-full sm:w-auto justify-center">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span class="font-bold">GitHub</span>
+                </a>
+
+                <!-- YouTube -->
+                <a href="https://www.youtube.com/@SaahirSharma" target="_blank" rel="noopener noreferrer" 
+                    class="flex items-center gap-3 button-secondary hover:shadow-lg w-full sm:w-auto justify-center">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    <span class="font-bold">YouTube</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white text-xs opacity-80 mb-4">
+            <p class="mb-2">
+                <strong>Legal Notice:</strong> This calculator provides general educational information based on IRS Publication 519 & IRC §7701(b).
+            </p>
+            <p class="mb-3">
+                <strong>This is NOT professional tax or legal advice.</strong> Tax rules vary by individual circumstances. 
+                Always consult a qualified CPA or tax attorney before making filing decisions.
+            </p>
+            <p class="text-xs opacity-70 border-t border-white/20 pt-3">
+                <strong>Open Source:</strong> This project is on GitHub. Feel free to fork, contribute, and share improvements!
+            </p>
+            <p class="mt-3 opacity-60">© 2024 | Built with ❤️ for the global community</p>
         </div>
     </div>
 
     <script>
-        function toggleExemption() {
-            const status = document.getElementById('visaStatus').value;
-            const hint = document.getElementById('exemptionHint');
-            hint.classList.toggle('hidden', status === 'none');
+        // State Management
+        const STATE = {
+            visa: 'none',
+            days: { year0: 0, year1: 0, year2: 0 },
+            lastCalculation: null
+        };
+
+        const CONFIG = {
+            WEIGHTS: { year0: 1.0, year1: 1/3, year2: 1/6 },
+            THRESHOLD: 183,
+            MIN_CURRENT_YEAR: 31,
+            VISA_TYPES: {
+                none: { exempt: false, label: 'Standard Visa' },
+                student: { exempt: true, label: 'Student (F, J, M, Q)' },
+                teacher: { exempt: true, label: 'Teacher/Trainee (J, Q)' }
+            }
+        };
+
+        function handleVisaChange() {
+            STATE.visa = document.getElementById('visaStatus').value;
+        }
+
+        function handleCalculate() {
+            // Collect input values
+            STATE.days.year0 = parseInt(document.getElementById('year0').value) || 0;
+            STATE.days.year1 = parseInt(document.getElementById('year1').value) || 0;
+            STATE.days.year2 = parseInt(document.getElementById('year2').value) || 0;
+
+            if (!validateInputs()) return;
+
+            const result = calculateTaxStatus();
+            displayResult(result);
+        }
+
+        function validateInputs() {
+            const { year0, year1, year2 } = STATE.days;
+            const valid = year0 >= 0 && year0 <= 366 && year1 >= 0 && year1 <= 366 && year2 >= 0 && year2 <= 366;
+            
+            if (!valid) {
+                alert('⚠️ Please enter days between 0-366 for each year.');
+                return false;
+            }
+            return true;
         }
 
         function calculateTaxStatus() {
-            const visa = document.getElementById('visaStatus').value;
-            let d0 = parseInt(document.getElementById('year0').value) || 0;
-            let d1 = parseInt(document.getElementById('year1').value) || 0;
-            let d2 = parseInt(document.getElementById('year2').value) || 0;
+            const { visa, days } = STATE;
+            const visaConfig = CONFIG.VISA_TYPES[visa];
+            const isExempt = visaConfig.exempt;
 
-            const originalD0 = d0;
-            let calcD0 = d0, calcD1 = d1, calcD2 = d2;
+            // Apply exemption
+            const effectiveDays = isExempt ? 
+                { year0: 0, year1: 0, year2: 0 } : 
+                { ...days };
 
-            // Handle Exempt logic
-            if (visa !== 'none') {
-                calcD0 = 0; calcD1 = 0; calcD2 = 0;
+            // Calculate weighted sum
+            const weightedSum = 
+                effectiveDays.year0 * CONFIG.WEIGHTS.year0 +
+                effectiveDays.year1 * CONFIG.WEIGHTS.year1 +
+                effectiveDays.year2 * CONFIG.WEIGHTS.year2;
+
+            // Determine status
+            let status, title, description;
+            let showCloserConnection = false;
+            let showExemption = false;
+
+            if (isExempt) {
+                status = { badge: 'NON-RESIDENT (EXEMPT)', color: 'status-nonresident' };
+                title = '✅ Exempt Individual';
+                description = `You qualify as an "Exempt Individual" under your ${visaConfig.label} status. The Substantial Presence Test does not apply to you during your exemption period.`;
+                showExemption = true;
+            }
+            else if (days.year0 < CONFIG.MIN_CURRENT_YEAR) {
+                status = { badge: 'NON-RESIDENT', color: 'status-nonresident' };
+                title = '❌ 31-Day Rule Not Met';
+                description = `You were in the U.S. for only ${days.year0} days in 2024. You fail the automatic 31-day minimum, making you a Non-Resident regardless of prior years.`;
+            }
+            else if (weightedSum >= CONFIG.THRESHOLD) {
+                status = { badge: 'RESIDENT ALIEN', color: 'status-resident' };
+                title = '✅ You Meet the Test';
+                description = `Congratulations! Your weighted total of ${weightedSum.toFixed(2)} days exceeds the 183-day threshold. You are a U.S. Resident Alien for tax purposes in 2024.`;
+                showCloserConnection = days.year0 < 183;
+            }
+            else {
+                status = { badge: 'NON-RESIDENT', color: 'status-nonresident' };
+                title = '❌ Threshold Not Met';
+                description = `Your weighted total is ${weightedSum.toFixed(2)} days, which is below the required 183-day threshold for tax residency.`;
             }
 
-            const weightedSum = calcD0 + (calcD1 / 3) + (calcD2 / 6);
-            
-            const resultDiv = document.getElementById('result');
+            return {
+                status,
+                title,
+                description,
+                weightedSum,
+                effectiveDays,
+                showCloserConnection,
+                showExemption,
+                isExempt
+            };
+        }
+
+        function displayResult(result) {
+            const container = document.getElementById('resultContainer');
+            const badge = document.getElementById('statusBadge');
+            const titleEl = document.getElementById('resultTitle');
+            const descEl = document.getElementById('resultDescription');
             const ccBox = document.getElementById('closerConnectionBox');
+            const exemptBox = document.getElementById('exemptionBox');
             const summary = document.getElementById('calcSummary');
 
-            resultDiv.classList.remove('hidden');
-            ccBox.classList.add('hidden');
+            // Update badge
+            badge.textContent = result.status.badge;
+            badge.className = `status-badge ${result.status.color}`;
 
-            // Production Decision Logic
-            if (visa !== 'none') {
-                updateUI("Non-Resident", "bg-blue-100 text-blue-700", "Exempt Individual Status", 
-                    "You are categorized as an 'Exempt Individual' due to your " + visa + " visa status. Your days in the U.S. do not count toward the Substantial Presence Test at this time.");
-            }
-            else if (d0 < 31) {
-                updateUI("Non-Resident", "bg-blue-100 text-blue-700", "31-Day Rule Not Met", 
-                    "You were in the U.S. for fewer than 31 days in 2024. This automatically makes you a Non-Resident for tax purposes, regardless of previous years.");
-            }
-            else if (weightedSum >= 183) {
-                updateUI("Resident Alien", "bg-emerald-100 text-emerald-700", "Tax Residency Met", 
-                    "You meet the Substantial Presence Test. You are generally considered a U.S. Resident for tax purposes for 2024.");
-                if (originalD0 < 183) ccBox.classList.remove('hidden');
-            } 
-            else {
-                updateUI("Non-Resident", "bg-blue-100 text-blue-700", "Weighted Total Not Met", 
-                    "Your weighted total of " + weightedSum.toFixed(2) + " days is below the 183-day threshold.");
-            }
+            // Update text
+            titleEl.textContent = result.title;
+            descEl.textContent = result.description;
 
-            summary.innerHTML = `
-                <div class="flex justify-between border-b border-slate-200 pb-1 uppercase tracking-tighter text-[10px] font-bold"><span>Year & Weight</span> <span>Calculated Days</span></div>
-                <div class="flex justify-between pt-2"><span>2024 Days (× 1.0)</span> <span>${calcD0}</span></div>
-                <div class="flex justify-between"><span>2023 Days (× 0.33)</span> <span>${(calcD1/3).toFixed(2)}</span></div>
-                <div class="flex justify-between"><span>2022 Days (× 0.16)</span> <span>${(calcD2/6).toFixed(2)}</span></div>
-                <div class="flex justify-between font-black text-slate-800 border-t border-slate-200 mt-2 pt-2"><span>Total Weighted Sum:</span> <span>${weightedSum.toFixed(2)}</span></div>
+            // Show/hide special notices
+            ccBox.classList.toggle('hidden', !result.showCloserConnection);
+            exemptBox.classList.toggle('hidden', !result.showExemption);
+
+            // Update calculation summary
+            updateCalculationSummary(summary, result);
+
+            // Show result container
+            container.classList.remove('hidden');
+            
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('resultTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+
+            STATE.lastCalculation = result;
+        }
+
+        function updateCalculationSummary(element, result) {
+            const { effectiveDays, weightedSum } = result;
+            const { WEIGHTS, THRESHOLD } = CONFIG;
+
+            const rows = [
+                { year: '2024', days: effectiveDays.year0, weight: WEIGHTS.year0, label: '2024 (Current) × 1.0' },
+                { year: '2023', days: effectiveDays.year1, weight: WEIGHTS.year1, label: '2023 (Prior) × 0.33' },
+                { year: '2022', days: effectiveDays.year2, weight: WEIGHTS.year2, label: '2022 (Prior) × 0.16' }
+            ];
+
+            let html = rows.map((row, idx) => {
+                const calc = (row.days * row.weight).toFixed(2);
+                return `
+                    <div class="summary-row ${idx < 2 ? 'border-b border-purple-200' : ''}">
+                        <span class="font-semibold text-gray-700">${row.label}</span>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">${row.days} days</div>
+                            <div class="font-bold text-purple-600 text-lg">= ${calc}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="bg-white rounded-xl p-4 mt-4 border-2 border-purple-300">
+                    <div class="flex justify-between items-center">
+                        <span class="font-black text-gray-900 text-lg">Total Weighted Sum</span>
+                        <span class="text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">${weightedSum.toFixed(2)}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-4 px-4 py-3 bg-purple-100 rounded-xl">
+                    <span class="font-semibold text-gray-700">Required Threshold</span>
+                    <span class="font-black text-purple-700 text-lg">${THRESHOLD} days</span>
+                </div>
+                <div class="flex justify-between items-center mt-3 px-4 py-3 ${weightedSum >= THRESHOLD ? 'bg-emerald-100' : 'bg-red-100'} rounded-xl">
+                    <span class="font-semibold ${weightedSum >= THRESHOLD ? 'text-emerald-900' : 'text-red-900'}">Status</span>
+                    <span class="font-black ${weightedSum >= THRESHOLD ? 'text-emerald-700' : 'text-red-700'} text-lg">${weightedSum >= THRESHOLD ? '✅ PASS' : '❌ FAIL'}</span>
+                </div>
             `;
+
+            element.innerHTML = html;
         }
 
-        function updateUI(badgeText, badgeClass, titleText, bodyText) {
-            const badge = document.getElementById('statusBadge');
-            badge.innerText = badgeText;
-            badge.className = `inline-block px-5 py-1.5 rounded-full text-xs font-black uppercase mb-5 tracking-widest ${badgeClass}`;
-            document.getElementById('resultTitle').innerText = titleText;
-            document.getElementById('resultText').innerText = bodyText;
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('sptForm').addEventListener('submit', e => {
+                e.preventDefault();
+                handleCalculate();
+            });
+        });
     </script>
 </body>
 </html>
